@@ -14,15 +14,15 @@ CustomRenderTexture:
   m_DownscaleFallback: 0
   m_IsAlphaChannelOptional: 0
   serializedVersion: 5
-  m_Width: 256
-  m_Height: 256
+  m_Width: 1024
+  m_Height: 1024
   m_AntiAliasing: 1
   m_MipCount: -1
   m_DepthStencilFormat: 94
-  m_ColorFormat: 8
+  m_ColorFormat: 4
   m_MipMap: 0
   m_GenerateMips: 1
-  m_SRGB: 0
+  m_SRGB: 1
   m_UseDynamicScale: 0
   m_BindMS: 0
   m_EnableCompatibleFormat: 1
@@ -40,15 +40,20 @@ CustomRenderTexture:
   m_Material: {fileID: 2100000, guid: 2c9bd2eb25b98584787edfa5fb61ee17, type: 2}
   m_InitSource: 1
   m_InitMaterial: {fileID: 2100000, guid: 2c9bd2eb25b98584787edfa5fb61ee17, type: 2}
-  m_InitColor: {r: 1, g: 1, b: 1, a: 1}
+  m_InitColor: {r: 0, g: 0, b: 0, a: 1}
   m_InitTexture: {fileID: 0}
-  m_UpdateMode: 0
+  m_UpdateMode: 1
   m_InitializationMode: 1
-  m_UpdateZoneSpace: 0
-  m_CurrentUpdateZoneSpace: 0
-  m_UpdateZones: []
+  m_UpdateZoneSpace: 1
+  m_CurrentUpdateZoneSpace: 1
+  m_UpdateZones:
+  - updateZoneCenter: {x: 512, y: 512, z: 0.5}
+    updateZoneSize: {x: 1024, y: 1024, z: 1}
+    rotation: 0
+    passIndex: -1
+    needSwap: 1
   m_UpdatePeriod: 0
   m_ShaderPass: 0
   m_CubemapFaceMask: 4294967295
   m_DoubleBuffered: 1
-  m_WrapUpdateZones: 0
+  m_WrapUpdateZones: 1

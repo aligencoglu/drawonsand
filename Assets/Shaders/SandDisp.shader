@@ -49,7 +49,7 @@ Shader "CustomRenderTexture/SandDisp"
                 outsideMask *= _MouseDown;
 
 
-                float3 prevColFaded = prevCol.xyz;
+                float3 prevColFaded = prevCol.xyz - float3(1, 1, 1) * _Falloff;
                 float3 mouseMaskReadied = (-mouseMask * _BrushWeight).xxx;
                 float3 outsideMaskReadied = (-outsideMask * _BrushWeight).xxx;
                 float3 col = saturate(prevColFaded);
