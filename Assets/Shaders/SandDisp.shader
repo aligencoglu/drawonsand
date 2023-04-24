@@ -61,11 +61,11 @@ Shader "CustomRenderTexture/SandDisp"
 
 
                 if (_MouseDown) {
-                    col = lerp(col, mouseMaskReadied, normalizedDist < 0.5 && col.x < mouseMaskReadied.x);
+                    col.x = lerp(col.x, mouseMaskReadied, normalizedDist < 0.5 && col.x < mouseMaskReadied.x);
                     //col = lerp(col, outsideMaskReadied, normalizedDist > 0.5 && normalizedDist < 1 && col.x >= 0);
                 }
 
-                return lerp(float4(col, 1), float4(col.x, lerp(fwidth(col.x), 0, normalizedDist < 0.5), 0, 1), _MouseDown);
+                return float4(col.x, lerp(fwidth(col.x), 0, normalizedDist < 0.5), 0, 1);
             }
            
             ENDCG
