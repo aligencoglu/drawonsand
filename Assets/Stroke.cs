@@ -9,20 +9,31 @@ public class Stroke
     ///
 {
     public Stroke()
+        /// Creates an empty stroke
     {
         this.points = new List<Vector3>();
         initValues();
     }
 
     public Stroke(List<Vector3> points)
+        /// Creates a stroke from a list of points
     {
         this.points = points;
         initValues();
     }
 
     public Stroke(Vector3[] points)
+        /// Creates a stroke from an array of points
     {
         this.points = new List<Vector3>(points);
+        initValues();
+    }
+
+    public Stroke(Vector3 startPoint)
+        /// Creates a stroke with a single point
+    {
+        points = new List<Vector3>();
+        points.Add(startPoint);
         initValues();
     }
     
