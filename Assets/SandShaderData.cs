@@ -7,6 +7,7 @@ public class SandShaderData : MonoBehaviour
 {
     public MouseGetter mouseGetter;
     public Material sandDisp;
+    public Material sand;
 
     // Update is called once per frame
     void Update()
@@ -19,7 +20,10 @@ public class SandShaderData : MonoBehaviour
         // set material values
         sandDisp.SetVector("_MousePos", uvMouseHit);
         sandDisp.SetVector("_MouseVel", uvMouseVel);
-        sandDisp.SetFloat("_MouseDown", Convert.ToSingle(mouseGetter.mouseDown));
+
+        float mouseDownFloat = Convert.ToSingle(mouseGetter.mouseDown);
+        sandDisp.SetFloat("_MouseDown", mouseDownFloat);
+        sand.SetFloat("_MouseDown", mouseDownFloat);
 
     }
 }

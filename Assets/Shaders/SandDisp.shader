@@ -5,6 +5,7 @@ Shader "CustomRenderTexture/SandDisp"
         [HideInInspector] _MousePos("Mouse Position", Vector) = (0, 0, 0, 0)
         [HideInInspector] _MouseVel("Mouse Velocity", Vector) = (0, 0, 0, 0)
         [HideInInspector] _MouseDown("Mouse Down", Float) = 0
+        _Test ("Test", Float) = 0
         _Falloff ("Falloff", Range(0.0, 0.3)) = 0
         _BrushWeight ("Brush Weight", Range(0.0, 5.0)) = 1
         _BrushPixelWidth ("Brush Pixel Width", Float) = 10
@@ -30,6 +31,7 @@ Shader "CustomRenderTexture/SandDisp"
             float _Falloff;
             float _BrushPixelWidth;
             float _BrushWeight;
+            float _Test;
 
             float4 frag(v2f_init_customrendertexture IN) : COLOR
             {
@@ -48,17 +50,22 @@ Shader "CustomRenderTexture/SandDisp"
                 outsideMask *= 0.25 - 4 * (normalizedDist - 0.75) * (normalizedDist - 0.75);
                 outsideMask *= _MouseDown;
 
-
                 float3 prevColFaded = prevCol.xyz - float3(1, 1, 1) * _Falloff;
+                float3 col = saturate(prevColFaded);
+                //float velMask = -dot(_MousePos.xy - IN.texcoord.xy, _MouseVel.xy);
                 float3 mouseMaskReadied = (-mouseMask * _BrushWeight).xxx;
                 float3 outsideMaskReadied = (-outsideMask * _BrushWeight).xxx;
-                float3 col = saturate(prevColFaded);
+
+
+                
+
+
                 if (_MouseDown) {
                     col = lerp(col, mouseMaskReadied, normalizedDist < 0.5 && col.x < mouseMaskReadied.x);
-                    col = lerp(col, outsideMaskReadied, normalizedDist > 0.5 && normalizedDist < 1 && col.x <= 0);
+                    //col = lerp(col, outsideMaskReadied, normalizedDist > 0.5 && normalizedDist < 1 && col.x >= 0);
                 }
 
-                return float4(col, 1);
+                return lerp(float4(col, 1), float4(col.x, lerp(fwidth(col.x), 0, normalizedDist < 0.5), 0, 1), _MouseDown);
             }
            
             ENDCG

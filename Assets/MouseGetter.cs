@@ -19,7 +19,7 @@ public class MouseGetter : MonoBehaviour
     */
 
 
-    void FixedUpdate()
+    void Update()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, float.MaxValue, LayerMask.GetMask("Sand")))
@@ -27,7 +27,7 @@ public class MouseGetter : MonoBehaviour
             
             if (mouseDown == true)
             {
-                mouseVel = (hit.point - mouseHit) / Time.fixedDeltaTime;
+                mouseVel = (hit.point - mouseHit) / Time.deltaTime;
             }
             mouseHit = hit.point;
 

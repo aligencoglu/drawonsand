@@ -6,6 +6,7 @@ Shader "Unlit/Sand"
         _WetSandTex("Wet Sand Texture", 2D) = "" {}
         _DispTex ("Displacement Texture", 2D) = "" {}
         _DispAmt ("Displacement Amount", Range(0.0, 1.0)) = 1
+        [HideInInspector] _MouseDown ("Mouse Down", Float) = 0
     }
     SubShader
     {
@@ -75,15 +76,16 @@ Shader "Unlit/Sand"
                 UNITY_SETUP_INSTANCE_ID(patch[0]); // Set up instancing
                 // Calculate tessellation factors
                 TessellationFactors f;
-                f.edge[0] = 100;
-                f.edge[1] = 100;
-                f.edge[2] = 100;
-                f.inside = 100;
+                f.edge[0] = 10000;
+                f.edge[1] = 10000;
+                f.edge[2] = 10000;
+                f.inside = 10000;
                 return f;
             }
 
             sampler2D _DispTex;
             float _DispAmt;
+            float _MouseDown;
 
             #define BARYCENTRIC_INTERPOLATE(fieldName) \
 		            patch[0].fieldName * barycentricCoordinates.x + \
@@ -104,7 +106,7 @@ Shader "Unlit/Sand"
                 float3 interpolated_vertex = BARYCENTRIC_INTERPOLATE(vertex);
                 float4 disp = tex2Dlod(_DispTex, float4(output.uv, 0, 0));
                 output.disp = disp;
-                output.vertex = UnityObjectToClipPos(interpolated_vertex + float3(0, 0, disp.x) * _DispAmt);
+                output.vertex = UnityObjectToClipPos(interpolated_vertex + float3(0, 0, lerp(disp.x, -disp.y * 2, disp.y != 0)) * _DispAmt);
                 
 
                 return output;
@@ -116,7 +118,7 @@ Shader "Unlit/Sand"
 
             float4 Fragment(Interpolators i) : SV_Target
             {
-                return lerp(tex2D(_SandTex, i.uv), tex2D(_WetSandTex, i.uv), i.disp.x);
+                return tex2D(_SandTex, i.uv) * (1-i.disp.x * 0.5);
             }
             ENDCG
         }
