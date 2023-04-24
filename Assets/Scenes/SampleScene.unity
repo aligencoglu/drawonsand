@@ -328,6 +328,7 @@ GameObject:
   - component: {fileID: 862607898}
   - component: {fileID: 862607897}
   - component: {fileID: 862607901}
+  - component: {fileID: 862607902}
   m_Layer: 3
   m_Name: Quad
   m_TagString: Untagged
@@ -429,6 +430,18 @@ MonoBehaviour:
   mouseGetter: {fileID: 963194229}
   sandDisp: {fileID: 2100000, guid: 2c9bd2eb25b98584787edfa5fb61ee17, type: 2}
   sand: {fileID: 2100000, guid: 73e646c90bc205a4c842b4bbe55e10f7, type: 2}
+--- !u!114 &862607902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 862607896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2887b6948830ad4cab6b7f991f21120, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
