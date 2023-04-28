@@ -10,8 +10,7 @@ Shader "Unlit/Sand"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
-        LOD 100
+        Tags { "RenderType"="Opaque" "LightMode" = "ForwardBase" }
 
         Pass
         {
@@ -24,6 +23,9 @@ Shader "Unlit/Sand"
 
             #include "UnityCG.cginc"
 
+            #pragma multi_compile_fwdbase
+            #include "AutoLight.cginc"
+
             struct Attributes
             {
                 float4 vertex : POSITION;
@@ -33,8 +35,9 @@ Shader "Unlit/Sand"
             struct Interpolators
             {
                 float2 uv : TEXCOORD0;
-                float4 vertex : SV_POSITION;
+                float4 pos : SV_POSITION;
                 float4 disp : TEXCOORD1;
+                LIGHTING_COORDS(2,3)
             };
 
             struct TessellationControlPoint {
@@ -106,7 +109,10 @@ Shader "Unlit/Sand"
                 float3 interpolated_vertex = BARYCENTRIC_INTERPOLATE(vertex);
                 float4 disp = tex2Dlod(_DispTex, float4(output.uv, 0, 0));
                 output.disp = disp;
-                output.vertex = UnityObjectToClipPos(interpolated_vertex + float3(0, 0, lerp(disp.x, -disp.y * 2, disp.y != 0)) * _DispAmt);
+                output.pos = UnityObjectToClipPos(interpolated_vertex + float3(0, 0, lerp(disp.x, -disp.y * 2, disp.y != 0)) * _DispAmt);
+
+
+                TRANSFER_VERTEX_TO_FRAGMENT(output);
                 
 
                 return output;
@@ -118,9 +124,12 @@ Shader "Unlit/Sand"
 
             float4 Fragment(Interpolators i) : SV_Target
             {
-                return tex2D(_SandTex, i.uv) * (1-i.disp.x * 0.5);
+                float attenuation = LIGHT_ATTENUATION(i);
+                return tex2D(_SandTex, i.uv) * (1-i.disp.x * 0.5) * attenuation;
             }
             ENDCG
         }
     }
+
+    Fallback "VertexLit"
 }
