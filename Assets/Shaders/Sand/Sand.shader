@@ -9,7 +9,9 @@ Shader "Unlit/Sand"
         _DispAmt ("Displacement Amount", Range(0.0, 1.0)) = 1
         _NoiseSize ("Noise Size", Float) = 1
         _NoiseDispAmt ("Noise Displacement Amount", Float) = 1
+        _TessAmt ("Tesselation Amount", Integer) = 10
         [HideInInspector] _MouseDown ("Mouse Down", Float) = 0
+        _Test ("Test", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -59,6 +61,18 @@ Shader "Unlit/Sand"
 
                 return output;
             }
+
+            sampler2D _DispTex;
+            sampler2D _SandTex;
+            sampler2D _WetSandTex;
+            sampler2D _NoiseTex;
+            float4 _SandTex_ST;
+            float _DispAmt;
+            float _NoiseSize;
+            float _NoiseDispAmt;
+            float _MouseDown;
+            float _Test;
+            float _TessAmt;
             
             // The hull function runs once per vertex. You can use it to modify vertex
             // data based on values in the entire triangle
@@ -86,23 +100,12 @@ Shader "Unlit/Sand"
                 UNITY_SETUP_INSTANCE_ID(patch[0]); // Set up instancing
                 // Calculate tessellation factors
                 TessellationFactors f;
-                f.edge[0] = 10000;
-                f.edge[1] = 10000;
-                f.edge[2] = 10000;
-                f.inside = 10000;
+                f.edge[0] = _TessAmt;
+                f.edge[1] = _TessAmt;
+                f.edge[2] = _TessAmt;
+                f.inside = _TessAmt;
                 return f;
             }
-
-            sampler2D _DispTex;
-            sampler2D _SandTex;
-            sampler2D _WetSandTex;
-            sampler2D _NoiseTex;
-            float4 _SandTex_ST;
-            float _DispAmt;
-            float _NoiseSize;
-            float _NoiseDispAmt;
-            float _MouseDown;
-            float _Test;
 
             #define BARYCENTRIC_INTERPOLATE(fieldName) \
 		            patch[0].fieldName * barycentricCoordinates.x + \
@@ -138,7 +141,7 @@ Shader "Unlit/Sand"
 
                 output.disp = disp;
 
-                output.vertex = UnityObjectToClipPos(interpolated_vertex + float3(0, 0, lerp(disp.x, -disp.y * 2, disp.y != 0) * _DispAmt + noise * _NoiseDispAmt));
+                output.vertex = UnityObjectToClipPos(interpolated_vertex - float3(0, lerp(disp.x, -disp.y * 2, disp.y != 0) * _DispAmt + noise * _NoiseDispAmt, 0));
                 output._ShadowCoord = ComputeScreenPos(output.vertex);
 
                 #if UNITY_PASS_SHADOWCASTER
@@ -157,7 +160,9 @@ Shader "Unlit/Sand"
 
                 float3 ambient = ShadeSH9(float4(i.normal, 1));
                 float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
-                return tex2D(_SandTex, i.uv) * (1-i.disp.x * 0.5) * lightIntensity;
+                float4 testColors = tex2D(_DispTex, i.uv * 0.2);
+                float4 col = tex2D(_SandTex, i.uv) * (1 - i.disp.x * 0.5) * lightIntensity;
+                return lerp(testColors, col, 1-_Test);
             }
             ENDCG
         }

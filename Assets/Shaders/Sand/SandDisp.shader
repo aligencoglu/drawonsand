@@ -65,7 +65,7 @@ Shader "CustomRenderTexture/SandDisp"
                     //col = lerp(col, outsideMaskReadied, normalizedDist > 0.5 && normalizedDist < 1 && col.x >= 0);
                 }
 
-                return float4(col.x, lerp(fwidth(col.x), 0, normalizedDist < 0.5), 0, 1);
+                return float4(col.x, lerp(fwidth(col.x), 0, normalizedDist < 0.5 && _MouseDown), 0, 1);
             }
            
             ENDCG

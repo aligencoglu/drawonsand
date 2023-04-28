@@ -13,9 +13,12 @@ public class SandShaderData : MonoBehaviour
     void Update()
     {
         // transform mouse info from world to UV space
-        Vector2 uvMouseHit = transform.InverseTransformPoint(mouseGetter.mouseHit);
+        Vector3 localMouseHit = transform.InverseTransformPoint(mouseGetter.mouseHit) * 0.1f;
+        Vector2 uvMouseHit = new Vector2(-localMouseHit.x, -localMouseHit.z) + Vector2.one * 0.5f;
         Vector2 uvMouseVel = transform.InverseTransformVector(mouseGetter.mouseVel);
-        uvMouseHit += new Vector2(0.5f, 0.5f);
+        //uvMouseHit += new Vector2(0.5f, 0.5f);
+
+        Debug.Log(uvMouseHit);
 
         // set material values
         sandDisp.SetVector("_MousePos", uvMouseHit);
