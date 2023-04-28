@@ -5,7 +5,10 @@ Shader "Unlit/Sand"
         _SandTex("Sand Texture", 2D) = "" {}
         _WetSandTex("Wet Sand Texture", 2D) = "" {}
         _DispTex ("Displacement Texture", 2D) = "" {}
+        _NoiseTex("Noise Texture", 2D) = "" {}
         _DispAmt ("Displacement Amount", Range(0.0, 1.0)) = 1
+        _NoiseSize ("Noise Size", Float) = 1
+        _NoiseDispAmt ("Noise Displacement Amount", Float) = 1
         [HideInInspector] _MouseDown ("Mouse Down", Float) = 0
     }
     SubShader
@@ -20,35 +23,39 @@ Shader "Unlit/Sand"
             #pragma hull Hull
             #pragma domain Domain
             #pragma fragment Fragment
+            #pragma multi_compile_fwdbase
 
             #include "UnityCG.cginc"
-
-            #pragma multi_compile_fwdbase
-            #include "AutoLight.cginc"
+            #include "Autolight.cginc"
+            #include "UnityLightingCommon.cginc"
 
             struct Attributes
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
             };
 
             struct Interpolators
             {
                 float2 uv : TEXCOORD0;
-                float4 pos : SV_POSITION;
+                float4 vertex : SV_POSITION;
                 float4 disp : TEXCOORD1;
-                LIGHTING_COORDS(2,3)
+                float4 _ShadowCoord : TEXCOORD2;
+                float3 normal : NORMAL;
             };
 
             struct TessellationControlPoint {
                 float3 vertex : INTERNALTESSPOS;
                 float2 uv : TEXCOORD0;
+                float3 normal : TEXCOORD1;
             };
 
             TessellationControlPoint Vertex(Attributes input) {
                 TessellationControlPoint output;
                 output.vertex = input.vertex;
                 output.uv = input.uv;
+                output.normal = input.normal;
 
                 return output;
             }
@@ -87,8 +94,15 @@ Shader "Unlit/Sand"
             }
 
             sampler2D _DispTex;
+            sampler2D _SandTex;
+            sampler2D _WetSandTex;
+            sampler2D _NoiseTex;
+            float4 _SandTex_ST;
             float _DispAmt;
+            float _NoiseSize;
+            float _NoiseDispAmt;
             float _MouseDown;
+            float _Test;
 
             #define BARYCENTRIC_INTERPOLATE(fieldName) \
 		            patch[0].fieldName * barycentricCoordinates.x + \
@@ -104,32 +118,82 @@ Shader "Unlit/Sand"
                 float3 barycentricCoordinates : SV_DomainLocation) { // The barycentric coordinates of the vertex on the triangle
 
                 Interpolators output;
+
+                // get uvs
                 output.uv = BARYCENTRIC_INTERPOLATE(uv);
-
-                float3 interpolated_vertex = BARYCENTRIC_INTERPOLATE(vertex);
-                float4 disp = tex2Dlod(_DispTex, float4(output.uv, 0, 0));
-                output.disp = disp;
-                output.pos = UnityObjectToClipPos(interpolated_vertex + float3(0, 0, lerp(disp.x, -disp.y * 2, disp.y != 0)) * _DispAmt);
-
-
-                TRANSFER_VERTEX_TO_FRAGMENT(output);
                 
+                // get normals
+                output.normal = BARYCENTRIC_INTERPOLATE(normal);
+                output.normal = UnityObjectToWorldNormal(output.normal);
+
+                // get vertex pos
+                float3 interpolated_vertex = BARYCENTRIC_INTERPOLATE(vertex);
+
+                // get displacement from disptex
+                float4 disp = tex2Dlod(_DispTex, float4(output.uv, 0, 0));
+                output.uv = TRANSFORM_TEX(output.uv, _SandTex);
+
+                // get perlin noise from noisetex
+                float noise = tex2Dlod(_NoiseTex, float4(output.uv * _NoiseSize, 0, 0)) - 0.25;
+
+                output.disp = disp;
+
+                output.vertex = UnityObjectToClipPos(interpolated_vertex + float3(0, 0, lerp(disp.x, -disp.y * 2, disp.y != 0) * _DispAmt + noise * _NoiseDispAmt));
+                output._ShadowCoord = ComputeScreenPos(output.vertex);
+
+                #if UNITY_PASS_SHADOWCASTER
+                    // Applying the bias prevents artifacts from appearing on the surface.
+                    o.pos = UnityApplyLinearShadowBias(o.pos);
+                #endif
 
                 return output;
 
             }
 
-            sampler2D _SandTex;
-            sampler2D _WetSandTex;
-
             float4 Fragment(Interpolators i) : SV_Target
             {
-                float attenuation = LIGHT_ATTENUATION(i);
-                return tex2D(_SandTex, i.uv) * (1-i.disp.x * 0.5) * attenuation;
+                float shadow = SHADOW_ATTENUATION(i);
+                float NdotL = saturate(saturate(dot(i.normal, _WorldSpaceLightPos0)) + 0.5) * shadow;
+
+                float3 ambient = ShadeSH9(float4(i.normal, 1));
+                float4 lightIntensity = NdotL * _LightColor0 + float4(ambient, 1);
+                return tex2D(_SandTex, i.uv) * (1-i.disp.x * 0.5) * lightIntensity;
             }
             ENDCG
         }
-    }
 
-    Fallback "VertexLit"
+        // Add below the existing Pass.
+        Pass
+        {
+            Tags
+            {
+                "LightMode" = "ShadowCaster"
+            }
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma target 5.0
+            #pragma multi_compile_shadowcaster
+            #include "UnityCG.cginc"
+
+            struct v2f {
+                V2F_SHADOW_CASTER;
+            };
+
+            v2f vert(appdata_base v) {
+                v2f o;
+                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o)
+                return o;
+
+            }
+
+            float4 frag(v2f i) : SV_Target
+            {
+                SHADOW_CASTER_FRAGMENT(i)
+            }
+
+            ENDCG
+        }
+    }
 }

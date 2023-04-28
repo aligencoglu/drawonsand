@@ -48,6 +48,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _NoiseTexture:
+        m_Texture: {fileID: 2800000, guid: 1f610bff6833fa34bbaf2bdfe05bb0f2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -58,9 +62,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BubbleDepth: 0.69
+    - _BubbleFullColorStart: 0.58
+    - _BubbleWaveNoiseSize: 3.52
     - _BumpScale: 1
     - _Cutoff: 0.5
-    - _DepthMaxDistance: 1
+    - _DepthMaxDistance: 23.8
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
@@ -76,6 +83,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _BubbleColor: {r: 0.9032574, g: 0.9622642, b: 0.95945436, a: 0.9}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DepthGradientDeep: {r: 0.08599999, g: 0.40699998, b: 1, a: 0.749}
     - _DepthGradientShallow: {r: 0.32499996, g: 0.807, b: 0.971, a: 0.725}
