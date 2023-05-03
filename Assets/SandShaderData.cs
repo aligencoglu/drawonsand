@@ -18,13 +18,13 @@ public class SandShaderData : MonoBehaviour
         Vector2 uvMouseVel = transform.InverseTransformVector(mouseGetter.mouseVel);
         //uvMouseHit += new Vector2(0.5f, 0.5f);
 
-        Debug.Log(uvMouseHit);
+        //Debug.Log(uvMouseHit);
 
         // set material values
         sandDisp.SetVector("_MousePos", uvMouseHit);
         sandDisp.SetVector("_MouseVel", uvMouseVel);
 
-        float mouseDownFloat = Convert.ToSingle(mouseGetter.mouseDown);
+        float mouseDownFloat = Convert.ToSingle(mouseGetter.mouseHeld);
         sandDisp.SetFloat("_MouseDown", mouseDownFloat);
         sand.SetFloat("_MouseDown", mouseDownFloat);
 

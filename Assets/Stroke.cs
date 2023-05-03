@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+
+// TODO: Test this!
 public class Stroke
     ///
     /// Represents a single stroke drawn by the player.
@@ -38,7 +40,7 @@ public class Stroke
     }
     
     public List<Vector3> points { get; private set; } // points making up this stroke
-    private int pointAmt; // amount of points
+    public int pointAmt { get; private set; } // amount of points
 
     // length info
     public float length { get; private set; } // total length of the stroke
@@ -49,6 +51,8 @@ public class Stroke
     public float internalAngleSum { get; private set; } // sum of internal angles at points
     private float angleMean; // mean of the internal angles at points
     private float angleSqDistFromAngleMean; // sum of the squared distances of the internal angles from the mean internal angle
+
+
 
 
     public void addPoint(Vector3 newPoint)
@@ -84,10 +88,13 @@ public class Stroke
             // update angle info
             int angleAmt = pointAmt - 2;
             Vector3 lastLine = points[pointAmt - 1] - points[pointAmt - 2];
-            Vector3 secondLastLine = points[pointAmt - 2] - points[pointAmt - 3];
-            float newAngle = Mathf.Abs(Vector3.Angle(secondLastLine, lastLine));
-            if (newAngle > 180)
-                newAngle = 360 - newAngle;
+            Vector3 secondLastLine = points[pointAmt - 3] - points[pointAmt - 2];
+            float newAngle = Vector3.SignedAngle(secondLastLine, lastLine,Vector3.back);
+            if (newAngle < 0)
+            {
+                newAngle = 360 + newAngle;
+            }
+            //Debug.Log(angleAmt + ": " + newAngle);
             internalAngleSum += newAngle;
 
             float delta = newAngle - angleMean;
@@ -157,8 +164,6 @@ public class Stroke
                 Vector3 lastLine = points[i+1] - points[i];
                 Vector3 secondLastLine = points[i] - points[i-1];
                 float newAngle = Mathf.Abs(Vector3.Angle(secondLastLine, lastLine));
-                if (newAngle > 180)
-                    newAngle = 360 - newAngle;
                 internalAngleSum += newAngle;
 
                 angleMean += newAngle;
@@ -229,5 +234,10 @@ public class Stroke
         if (pointAmt <= 2) return false;
 
         return (points[pointAmt - 1] - points[0]).magnitude < 0.1;
+    }
+
+    public bool sameAsLastPoint(Vector3 nextPoint)
+    {
+        return nextPoint == points[pointAmt-1];
     }
 }
