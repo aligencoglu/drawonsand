@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,7 +55,7 @@ public class Stroke
     private float angleMean; // mean of the internal angles at points
     private float angleSqDistFromAngleMean; // sum of the squared distances of the internal angles from the mean internal angle
 
-    private float angleAt(int i)
+    public float angleAt(int i)
     {
         if (i == 0 || i == pointAmt - 1) return -1f;
 
@@ -68,6 +69,80 @@ public class Stroke
 
         return angle;
 
+    }
+
+    private void initValues()
+    ///
+    /// Initialize internal values when initializing object.
+    ///
+    {
+        // get point amt
+        pointAmt = points.Count;
+
+        // set length values
+        if (pointAmt <= 1)
+        {
+            this.length = 0;
+            this.lineMeanLength = 0;
+            this.lineSqDistFromMeanLength = 0;
+        }
+        else
+        {
+            // get line amt for calculations
+            int lineAmt = pointAmt - 1;
+
+            // get total length
+            float length = 0;
+            for (int i = 1; i < points.Count; i++)
+            {
+                length += Vector3.Magnitude(points[i] - points[i - 1]);
+            }
+            this.length = length;
+
+            // get mean length between points
+            lineMeanLength = length / lineAmt;
+
+            // get sum of squared distances from mean
+            for (int i = 1; i < points.Count; i++)
+            {
+                lineSqDistFromMeanLength += Mathf.Pow(Vector3.Magnitude(points[i] - points[i - 1]) - lineMeanLength, 2);
+            }
+
+        }
+
+        // set angle values
+        if (pointAmt <= 2)
+        {
+            this.internalAngleSum = 0;
+            this.angleMean = 0;
+            this.angleSqDistFromAngleMean = 0;
+        }
+        else
+        {
+            // get angle amt for calculations
+            int angleAmt = pointAmt - 2;
+
+            // get total angle sum
+            for (int i = 1; i < points.Count - 1; i++)
+            {
+                float newAngle = angleAt(i);
+                internalAngleSum += newAngle;
+
+                angleMean += newAngle;
+            }
+
+            // get mean angle at points
+            angleMean /= angleAmt;
+
+            // get sum of squared distances of angles from mean angle
+            for (int i = 1; i < points.Count - 1; i++)
+            {
+                float newAngle = angleAt(i);
+                angleSqDistFromAngleMean += Mathf.Pow(newAngle - angleMean, 2);
+            }
+
+
+        }
     }
 
     public void addPoint(Vector3 newPoint)
@@ -103,7 +178,7 @@ public class Stroke
             // update angle info
             int angleAmt = pointAmt - 2;
             float newAngle = angleAt(angleAmt);
-            Debug.Log(angleAmt + ": " + newAngle);
+            //Debug.Log(angleAmt + ": " + newAngle);
             internalAngleSum += newAngle;
 
             float delta = newAngle - angleMean;
@@ -115,78 +190,6 @@ public class Stroke
             internalAngleSum = 0;
             angleMean = 0;
             angleSqDistFromAngleMean = 0;
-        }
-    }
-
-    private void initValues()
-        ///
-        /// Initialize internal values when initializing object.
-        ///
-    {
-        // get point amt
-        pointAmt = points.Count;
-
-        // set length values
-        if (pointAmt <= 1)
-        {
-            this.length = 0;
-            this.lineMeanLength = 0;
-            this.lineSqDistFromMeanLength = 0;
-        } else
-        {
-            // get line amt for calculations
-            int lineAmt = pointAmt - 1;
-
-            // get total length
-            float length = 0;
-            for (int i = 1; i < points.Count; i++)
-            {
-                length += Vector3.Magnitude(points[i] - points[i - 1]);
-            }
-            this.length = length;
-
-            // get mean length between points
-            lineMeanLength = length / lineAmt;
-
-            // get sum of squared distances from mean
-            for (int i = 1; i < points.Count; i++)
-            {
-                lineSqDistFromMeanLength += Mathf.Pow(Vector3.Magnitude(points[i] - points[i - 1]) - lineMeanLength, 2);
-            }
-
-        }
-        
-        // set angle values
-        if (pointAmt <= 2)
-        {
-            this.internalAngleSum = 0;
-            this.angleMean = 0;
-            this.angleSqDistFromAngleMean = 0;
-        } else
-        {
-            // get angle amt for calculations
-            int angleAmt = pointAmt - 2;
-
-            // get total angle sum
-            for (int i = 1; i < points.Count - 1; i++)
-            {
-                float newAngle = angleAt(i);
-                internalAngleSum += newAngle;
-
-                angleMean += newAngle;
-            }
-
-            // get mean angle at points
-            angleMean /= angleAmt;
-
-            // get sum of squared distances of angles from mean angle
-            for (int i = 1; i < points.Count - 1; i++)
-            {
-                float newAngle = angleAt(i);
-                angleSqDistFromAngleMean += Mathf.Pow(newAngle - angleMean, 2);
-            }
-
-
         }
     }
 
@@ -243,30 +246,9 @@ public class Stroke
         return nextPoint == points[pointAmt-1];
     }
 
-    public bool isCircle()
+    public bool Detect(Predicate<Stroke> shapePredicate)
     {
-        var angleStats = getAngleStats();
-        float intAngle = (pointAmt - 4) / (float)(pointAmt - 2) * 180.0f;
-
-        // heuristics for detecting circles
-        // low angle standard deviation, and internal angles are near ideal internal angles
-        bool cwise = angleStats[0] - intAngle < 30;
-        bool ccwise = 180 - angleStats[0] - intAngle < 30;
-        if (cwise)
-        {
-            Debug.Log("Clockwise");
-        }
-        else if (ccwise)
-        {
-            Debug.Log("Counterclockwise");
-        }
-        return isClosed() && angleStats[1] < 25 && (cwise || ccwise);
-    }
-
-    public bool isLine()
-    {
-        var angleStats = getAngleStats();
-        return !isClosed() && Mathf.Abs(angleStats[0] - 180) <= 20 && angleStats[1] < 25;
+        return shapePredicate(this);
     }
 
     public bool isSmallPolygon()
