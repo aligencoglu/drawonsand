@@ -430,7 +430,7 @@ MonoBehaviour:
   - {x: 90, y: 0, z: 0}
   - {x: 5, y: 0, z: 0}
   selectedControlPoint: 0
-  speed: 0.1
+  speed: 0.033333335
 --- !u!114 &963194231
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -669,3 +669,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mouseGetter: {fileID: 963194229}
   ballTex: {fileID: 2800000, guid: 9cadde7a0d5f9024ab3f2cd5f6a740d6, type: 3}
+  lineSampleFrequency: 5
