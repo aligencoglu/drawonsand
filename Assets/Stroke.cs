@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -52,8 +54,21 @@ public class Stroke
     private float angleMean; // mean of the internal angles at points
     private float angleSqDistFromAngleMean; // sum of the squared distances of the internal angles from the mean internal angle
 
+    private float angleAt(int i)
+    {
+        if (i == 0 || i == pointAmt - 1) return -1f;
 
+        Vector3 frontLine = points[i+1] - points[i];
+        Vector3 backLine = points[i-1] - points[i];
+        float angle = Vector3.SignedAngle(backLine, frontLine, Vector3.back);
+        if (angle < 0)
+        {
+            angle = 360 + angle;
+        }
 
+        return angle;
+
+    }
 
     public void addPoint(Vector3 newPoint)
         ///
@@ -87,14 +102,8 @@ public class Stroke
         {
             // update angle info
             int angleAmt = pointAmt - 2;
-            Vector3 lastLine = points[pointAmt - 1] - points[pointAmt - 2];
-            Vector3 secondLastLine = points[pointAmt - 3] - points[pointAmt - 2];
-            float newAngle = Vector3.SignedAngle(secondLastLine, lastLine,Vector3.back);
-            if (newAngle < 0)
-            {
-                newAngle = 360 + newAngle;
-            }
-            //Debug.Log(angleAmt + ": " + newAngle);
+            float newAngle = angleAt(angleAmt);
+            Debug.Log(angleAmt + ": " + newAngle);
             internalAngleSum += newAngle;
 
             float delta = newAngle - angleMean;
@@ -161,9 +170,7 @@ public class Stroke
             // get total angle sum
             for (int i = 1; i < points.Count - 1; i++)
             {
-                Vector3 lastLine = points[i+1] - points[i];
-                Vector3 secondLastLine = points[i] - points[i-1];
-                float newAngle = Mathf.Abs(Vector3.Angle(secondLastLine, lastLine));
+                float newAngle = angleAt(i);
                 internalAngleSum += newAngle;
 
                 angleMean += newAngle;
@@ -175,12 +182,7 @@ public class Stroke
             // get sum of squared distances of angles from mean angle
             for (int i = 1; i < points.Count - 1; i++)
             {
-                Vector3 lastLine = points[i + 1] - points[i];
-                Vector3 secondLastLine = points[i] - points[i - 1];
-                float newAngle = Mathf.Abs(Vector3.Angle(secondLastLine, lastLine));
-                if (newAngle > 180)
-                    newAngle = 360 - newAngle;
-
+                float newAngle = angleAt(i);
                 angleSqDistFromAngleMean += Mathf.Pow(newAngle - angleMean, 2);
             }
 
@@ -239,5 +241,61 @@ public class Stroke
     public bool sameAsLastPoint(Vector3 nextPoint)
     {
         return nextPoint == points[pointAmt-1];
+    }
+
+    public bool isCircle()
+    {
+        var angleStats = getAngleStats();
+        float intAngle = (pointAmt - 4) / (float)(pointAmt - 2) * 180.0f;
+
+        // heuristics for detecting circles
+        // low angle standard deviation, and internal angles are near ideal internal angles
+        bool cwise = angleStats[0] - intAngle < 30;
+        bool ccwise = 180 - angleStats[0] - intAngle < 30;
+        if (cwise)
+        {
+            Debug.Log("Clockwise");
+        }
+        else if (ccwise)
+        {
+            Debug.Log("Counterclockwise");
+        }
+        return isClosed() && angleStats[1] < 25 && (cwise || ccwise);
+    }
+
+    public bool isLine()
+    {
+        var angleStats = getAngleStats();
+        return !isClosed() && Mathf.Abs(angleStats[0] - 180) <= 20 && angleStats[1] < 25;
+    }
+
+    public bool isSmallPolygon()
+    {
+        if (!isClosed()) return false;
+
+
+        var angleStats = getAngleStats();
+        List<int> deviations = new List<int>();
+        for (int i = 0; i < pointAmt; i++)
+        {
+            if (Mathf.Abs(angleAt(i) - 180) > 15)
+            {
+                deviations.Add(i);
+            }
+        }
+
+        float avg = (float)deviations.Average();
+        float stdDev = Mathf.Sqrt((float)deviations.Average(v => Mathf.Pow(v - avg, 2)));
+
+        // TODO
+        // get side lengths of each expected side, compare their lengths, enure low std dev
+        // get deviating angles, compare them to expected internal angles, ensure low std dev
+        // if both are satisfied well enough, pass
+
+        //Debug.Log("Deviation avg angle: " + avg);
+        //Debug.Log("Deviation angle std dev: " + stdDev);
+        //Debug.Log("Expected Sides: " + expectedSides);
+
+        return false;
     }
 }

@@ -58,16 +58,6 @@ public class ShapeDetector : MonoBehaviour
     }
     */
 
-    bool isCircle(Stroke stroke)
-    {
-        var angleStats = stroke.getAngleStats();
-        float intAngle = (stroke.pointAmt - 4) / (float)(stroke.pointAmt - 2) * 180.0f;
-
-        // heuristics for detecting circles
-        // low angle standard deviation, and internal angles are near ideal internal angles
-        return stroke.isClosed() && angleStats[1] < 25 && angleStats[0] - intAngle < 30;
-    }
-
     // Update is called once per frame
     
     void Update()
@@ -99,15 +89,23 @@ public class ShapeDetector : MonoBehaviour
 
             var angleStats = currStroke.getAngleStats();
             var lineStats = currStroke.getLengthStats();
-            //Debug.Log("Angle Mean & StdDev: " + angleStats[0] + " " + angleStats[1]);
+            Debug.Log("Angle Mean & StdDev: " + angleStats[0] + " " + angleStats[1]);
             float intAngle = (currStroke.pointAmt - 4) / (float)(currStroke.pointAmt - 2) * 180.0f;
-            //Debug.Log("Angle Mean for Perfect Sphere: " + intAngle);
-            //Debug.Log("Line Mean & StdDev: " + lineStats[0] + " " + lineStats[1]);
+            Debug.Log("Angle Mean for Perfect Sphere: " + intAngle);
+            Debug.Log("Line Mean & StdDev: " + lineStats[0] + " " + lineStats[1]);
 
-            if (isCircle(currStroke))
+
+            //currStroke.isSmallPolygon();
+            
+            if (currStroke.isCircle())
             {
                 Debug.Log("Circle");
+            } 
+            else if (currStroke.isLine())
+            {
+                Debug.Log("Line");
             }
+            
         }
         //Debug.Log(i);
     }
