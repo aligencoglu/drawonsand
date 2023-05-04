@@ -11,17 +11,6 @@ public class ShapeDetector : MonoBehaviour
     Stroke currStroke = null;
     int i = -1;
     public int lineSampleFrequency = 5;
-    List<float> circleMeanAngleData = new List<float>();
-    List<float> circleAngleDevData = new List<float>();
-
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-
-    }
 
     private void OnDrawGizmos()
     {
@@ -30,35 +19,32 @@ public class ShapeDetector : MonoBehaviour
             Vector3 lastPoint = Vector3.negativeInfinity;
             foreach(Vector3 point in currStroke.points)
             {
-                Gizmos.DrawSphere(point * 10, 0.1f);
+                Vector3 scaledPoint = point * 10;
+                Gizmos.DrawSphere(scaledPoint, 0.1f);
                 if (lastPoint != Vector3.negativeInfinity)
                 {
-                    Gizmos.DrawLine(lastPoint * 10, point * 10);
+                    Gizmos.DrawLine(lastPoint * 10, scaledPoint);
                 }
                 lastPoint = point;
             }
+
+
+            Gizmos.color = UnityEngine.Color.red;
+            List<int> deviations = ShapeDetection.Lines(currStroke);
+
+            int lastIndex = 0;
+            for (int i = 0; i < deviations.Count; i++)
+            {
+                int currIndex = deviations[i];
+                Vector3 from = currStroke.points[lastIndex] * 10;
+                Vector3 to = currStroke.points[currIndex] * 10;
+                Gizmos.DrawLine(from, to);
+                lastIndex = currIndex;
+            }
+            Gizmos.DrawLine(currStroke.points[lastIndex], currStroke.points[currStroke.pointAmt - 1]);
         }
         
     }
-
-
-    /*
-    void Update()
-    {
-        currStroke = new Stroke();
-        currStroke.addPoint(new Vector3(0, 0, 0));
-        currStroke.addPoint(new Vector3(0, 0.1f, 0));
-        currStroke.addPoint(new Vector3(0.1f, 0.1f, 0));
-        currStroke.addPoint(new Vector3(0.1f, 0, 0));
-        currStroke.addPoint(new Vector3(0, 0, 0));
-        var angleStats = currStroke.getAngleStats();
-        var lineStats = currStroke.getLengthStats();
-        Debug.Log("Angle Mean & StdDev: " + angleStats[0] + " " + angleStats[1]);
-        Debug.Log("Line Length: " + currStroke.length);
-    }
-    */
-
-    // Update is called once per frame
     
     void Update()
     {
@@ -77,33 +63,22 @@ public class ShapeDetector : MonoBehaviour
         else if (Input.GetMouseButtonUp(0))
         {
             i = -1;
-            if (currStroke.isClosed())
-            {
-                //Debug.Log("Closed!");
-                //Debug.Log("Angle Sum: " + currStroke.internalAngleSum);
-                
-            } else
-            {
-                Debug.Log("Open!");
-            }
-
-            var angleStats = currStroke.getAngleStats();
-            var lineStats = currStroke.getLengthStats();
-            Debug.Log("Angle Mean & StdDev: " + angleStats[0] + " " + angleStats[1]);
-            float intAngle = (currStroke.pointAmt - 4) / (float)(currStroke.pointAmt - 2) * 180.0f;
-            Debug.Log("Angle Mean for Perfect Sphere: " + intAngle);
-            Debug.Log("Line Mean & StdDev: " + lineStats[0] + " " + lineStats[1]);
-
-
-            //currStroke.isSmallPolygon();
             
-            if (currStroke.isCircle())
+            if (currStroke.Detect(ShapeDetection.Circle))
             {
                 Debug.Log("Circle");
             } 
-            else if (currStroke.isLine())
+            else if (currStroke.Detect(ShapeDetection.Line))
             {
                 Debug.Log("Line");
+            }
+            else if (currStroke.Detect(ShapeDetection.Triangle))
+            {
+                Debug.Log("Triangle");
+            } 
+            else if (currStroke.Detect(ShapeDetection.Rectangle))
+            {
+                Debug.Log("Rectangle");
             }
             
         }
