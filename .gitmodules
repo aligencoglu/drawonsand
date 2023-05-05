@@ -1,0 +1,3 @@
+[submodule "Assets/GizmoExtensions"]
+	path = Assets/GizmoExtensions
+	url = https://github.com/code-beans/GizmoExtensions.git

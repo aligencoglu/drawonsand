@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 // TODO: Test this!
 public class Stroke
     ///
-    /// Represents a single stroke drawn by the player.
+    /// Represents a single, continuous stroke drawn by the player.
     ///
 {
     public Stroke()
@@ -249,35 +249,5 @@ public class Stroke
     public bool Detect(Predicate<Stroke> shapePredicate)
     {
         return shapePredicate(this);
-    }
-
-    public bool isSmallPolygon()
-    {
-        if (!isClosed()) return false;
-
-
-        var angleStats = getAngleStats();
-        List<int> deviations = new List<int>();
-        for (int i = 0; i < pointAmt; i++)
-        {
-            if (Mathf.Abs(angleAt(i) - 180) > 15)
-            {
-                deviations.Add(i);
-            }
-        }
-
-        float avg = (float)deviations.Average();
-        float stdDev = Mathf.Sqrt((float)deviations.Average(v => Mathf.Pow(v - avg, 2)));
-
-        // TODO
-        // get side lengths of each expected side, compare their lengths, enure low std dev
-        // get deviating angles, compare them to expected internal angles, ensure low std dev
-        // if both are satisfied well enough, pass
-
-        //Debug.Log("Deviation avg angle: " + avg);
-        //Debug.Log("Deviation angle std dev: " + stdDev);
-        //Debug.Log("Expected Sides: " + expectedSides);
-
-        return false;
     }
 }
