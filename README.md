@@ -2,7 +2,9 @@
 ## A mellow little game about drawing on the sand at the beach. 
 
 
-https://user-images.githubusercontent.com/42721744/236551365-81b70afb-3b74-4bb3-be82-7e59ac803c7b.mp4
+
+
+https://github.com/aligencoglu/drawonsand/assets/42721744/8d1a09aa-c9b5-47f4-b1e0-80a38a7dcfce
 
 
 Including:
