@@ -3,18 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using Utils;
 
 public class ShapeDetector : MonoBehaviour
 {
     public MouseGetter mouseGetter;
     public int lineSampleFrequency = 5;
+    public ShapeHolder canvas;
 
     private Tuple<Vector3, float> lastCircle = null;
     private Vector3[] lastLine = { Vector3.zero, Vector3.zero };
     private Vector3[] lastTri = { Vector3.zero, Vector3.zero, Vector3.zero };
     private Vector3[] lastRect = { Vector3.zero, Vector3.zero };
-    Stroke currStroke = null;
+
+    
+    private Stroke currStroke = null;
+    int maxShapeInCanvas = 4;
     int i = -1;
 
     private void OnDrawGizmos()
@@ -22,9 +25,9 @@ public class ShapeDetector : MonoBehaviour
         const float scale = 10;
         if (currStroke != null)
         {
-            Gizmos.color = UnityEngine.Color.gray;
+            Gizmos.color = Color.gray;
             Vector3 lastPoint = Vector3.negativeInfinity;
-            foreach(Vector3 point in currStroke.points)
+            foreach (Vector3 point in currStroke.points)
             {
                 Vector3 scaledPoint = point * scale;
                 Gizmos.DrawSphere(scaledPoint, 0.1f);
@@ -50,13 +53,13 @@ public class ShapeDetector : MonoBehaviour
                 flipColor = !flipColor;
             }
             Gizmos.DrawLine(currStroke.points[lastIndex], currStroke.points[currStroke.pointAmt - 1]);
-            
+
         }
 
         Gizmos.color = UnityEngine.Color.blue;
         if (lastCircle != null)
         {
-            GizmosExtensions.DrawWireCircle(lastCircle.Item1 * scale, lastCircle.Item2 * scale, 20, Quaternion.LookRotation(Vector3.up));
+            Gizmos.DrawWireSphere(lastCircle.Item1 * scale, lastCircle.Item2 * scale);
         }
 
         if (lastLine != null)
@@ -86,55 +89,61 @@ public class ShapeDetector : MonoBehaviour
             Gizmos.DrawLine(corner4, corner1);
         }
 
-        
-        
+
+
     }
-    
+
     void Update()
     {
-
-        // create stroke
+        
         Vector3 mouseScreenPos = Camera.main.ScreenToViewportPoint(Input.mousePosition);
         if (Input.GetMouseButtonDown(0))
         {
+            // create stroke
             currStroke = new Stroke(mouseScreenPos);
             i = 0;
         }
         if (!Input.GetMouseButtonDown(0) && Input.GetMouseButton(0) && !currStroke.sameAsLastPoint(mouseScreenPos) && i != -1)
         {
+            // extend stroke
             if (i == 0)
                 currStroke.addPoint(mouseScreenPos);
             i = (i + 1) % lineSampleFrequency;
         }
         else if (Input.GetMouseButtonUp(0))
         {
-            i = -1;
+            if (canvas.ShapeAmount >= maxShapeInCanvas)
+                canvas.Clear();
 
+            // end stroke
+            i = -1;
             if (currStroke.Detect(ShapeDetection.Circle))
             {
                 Debug.Log("Circle");
                 lastCircle = ShapeDetection.EstimateCircle(currStroke);
-            } 
+                canvas.AddCircle(lastCircle.Item1, lastCircle.Item2);
+            }
             else if (currStroke.Detect(ShapeDetection.Line))
             {
                 Debug.Log("Line");
                 lastLine = ShapeDetection.EstimateLine(currStroke);
+                canvas.AddLine(lastLine[0], lastLine[1]);
             }
             else if (currStroke.Detect(ShapeDetection.Triangle))
             {
                 Debug.Log("Triangle");
                 lastTri = ShapeDetection.EstimateTriangle(currStroke);
-            } 
+                canvas.AddTriangle(lastTri[0], lastTri[1], lastTri[2]);
+            }
             else if (currStroke.Detect(ShapeDetection.Rectangle))
             {
                 Debug.Log("Rectangle");
                 lastRect = ShapeDetection.EstimateRectangle(currStroke);
+                canvas.AddRectangle(lastRect[0], lastRect[1]);
             }
-            
-            
         }
         //Debug.Log(i);
     }
-    
-    
+
+
 }
